@@ -1,24 +1,41 @@
 const messageList = document.querySelector("ul");
-const messageForm = document.querySelector("form");
+const messageForm = document.querySelector("#message");
+const nicknameForm = document.querySelector("#nickname");
 const socket = new WebSocket(`ws://${window.location.host}`);
 
 socket.addEventListener("open", () => console.log("Connected to Server!"));
-setTimeout(() => {
-  socket.send("Hello from Browser!");
-}, 10000);
+
 socket.addEventListener("message", async (event) => {
-  console.log(`New Message: ${await event.data.text()}`);
+  const message = await event.data;
+  const li = document.createElement("li");
+  li.innerText = message;
+  messageList.append(li);
   const input = messageForm.querySelector("input");
   input.value = "";
 });
+
 socket.addEventListener("close", () =>
   console.log("Disconnected from server!")
 );
 
-function handleSubmit(event) {
-  event.preventDefault();
-  const input = messageForm.querySelector("input");
-  socket.send(input.value);
+function formatMsg(type, payload) {
+  const msg = { type, payload };
+  return JSON.stringify(msg);
 }
 
-messageForm.addEventListener("submit", handleSubmit);
+function handleMsgSubmit(event) {
+  event.preventDefault();
+  const input = messageForm.querySelector("input");
+  socket.send(formatMsg("new_message", input.value));
+  input.value = "";
+}
+
+function handleNickSubmit(event) {
+  event.preventDefault();
+  const input = nicknameForm.querySelector("input");
+  socket.send(formatMsg("nickname", input.value));
+  input.value = "";
+}
+
+messageForm.addEventListener("submit", handleMsgSubmit);
+nicknameForm.addEventListener("submit", handleNickSubmit);

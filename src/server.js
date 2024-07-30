@@ -20,12 +20,20 @@ const browserSockets = []; // 서버와 응답하는 여러 브라우저의 소�
 
 websocketServer.on("connection", (socket) => {
   browserSockets.push(socket);
+  socket["nickname"] = "익명";
   console.log("Connected to browser!");
-  socket.send("Hello from Server!");
-  socket.on("message", (message) =>
-    browserSockets.forEach((socket) => socket.send(message))
-  );
   socket.on("close", () => console.log("Disconnected from Browser!"));
+  socket.on("message", (msgStr) => {
+    const msgObj = JSON.parse(msgStr);
+    switch (msgObj.type) {
+      case "new_message":
+        browserSockets.forEach((socket) =>
+          socket.send(`${socket.nickname}: ${msgObj.payload}`)
+        );
+      case "nickname":
+        socket["nickname"] = msgObj.payload;
+    }
+  });
 });
 
 server.listen(3000, handleListen);
