@@ -17,6 +17,9 @@ const websocketServer = SocketIo(httpServer);
 
 websocketServer.on("connection", (socket) => {
   console.log("socket", socket);
+  socket.on("createRoom", (payload, cbFunc) => {
+    cbFunc();
+  });
 });
 
 httpServer.listen(3000, handleListen);
