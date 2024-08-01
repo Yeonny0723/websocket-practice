@@ -18,7 +18,7 @@ const websocketServer = SocketIo(httpServer);
 websocketServer.on("connection", (socket) => {
   console.log("socket", socket);
   socket.on("createRoom", (payload, cbFunc) => {
-    cbFunc();
+    cbFunc(); // 프론트 함수를 백엔드에서 실행할 수 있음 !! - 실시간 업데이트 - 서버 푸시 알림
   });
 });
 
