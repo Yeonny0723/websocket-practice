@@ -1,5 +1,5 @@
 import http from "http";
-import WebSocket from "ws";
+import SocketIo from "socket.io";
 import express from "express";
 
 const app = express();
@@ -12,28 +12,14 @@ app.get("/*", (req, res) => res.redirect("/"));
 
 const handleListen = () => console.log(`Listening on ws://localhost:3000`);
 
-// http & ws 프로토콜 모두 이해하는 서버 생성
-const server = http.createServer(app);
-const websocketServer = new WebSocket.Server({ server });
-
-const browserSockets = []; // 서버와 응답하는 여러 브라우저의 소캣 저장하여 받은 메시지를 모두의 브라우저로 전달할 수 있음.
+const httpServer = http.createServer(app);
+const websocketServer = SocketIo(httpServer);
 
 websocketServer.on("connection", (socket) => {
-  browserSockets.push(socket);
-  socket["nickname"] = "익명";
-  console.log("Connected to browser!");
-  socket.on("close", () => console.log("Disconnected from Browser!"));
-  socket.on("message", (msgStr) => {
-    const msgObj = JSON.parse(msgStr);
-    switch (msgObj.type) {
-      case "new_message":
-        browserSockets.forEach((socket) =>
-          socket.send(`${socket.nickname}: ${msgObj.payload}`)
-        );
-      case "nickname":
-        socket["nickname"] = msgObj.payload;
-    }
+  console.log("socket", socket);
+  socket.on("createRoom", (payload, cbFunc) => {
+    cbFunc(); // 프론트 함수를 백엔드에서 실행할 수 있음 !! - 실시간 업데이트 - 서버 푸시 알림
   });
 });
 
-server.listen(3000, handleListen);
+httpServer.listen(3000, handleListen);

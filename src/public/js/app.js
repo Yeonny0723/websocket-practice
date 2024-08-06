@@ -1,41 +1,15 @@
-const messageList = document.querySelector("ul");
-const messageForm = document.querySelector("#message");
-const nicknameForm = document.querySelector("#nickname");
-const socket = new WebSocket(`ws://${window.location.host}`);
+const socket = io(); // 서버 연결 socket.io 내장 함수
 
-socket.addEventListener("open", () => console.log("Connected to Server!"));
+const roomContainer = document.getElementById("room-container");
+const form = roomContainer.querySelector("form");
 
-socket.addEventListener("message", async (event) => {
-  const message = await event.data;
-  const li = document.createElement("li");
-  li.innerText = message;
-  messageList.append(li);
-  const input = messageForm.querySelector("input");
-  input.value = "";
-});
-
-socket.addEventListener("close", () =>
-  console.log("Disconnected from server!")
-);
-
-function formatMsg(type, payload) {
-  const msg = { type, payload };
-  return JSON.stringify(msg);
-}
-
-function handleMsgSubmit(event) {
+function handleRoomSubmit(event) {
   event.preventDefault();
-  const input = messageForm.querySelector("input");
-  socket.send(formatMsg("new_message", input.value));
-  input.value = "";
+  const input = form.querySelector("input");
+  // emit(커스텀이벤트, ...페이로드 여러개...)
+  socket.emit("createRoom", { payload: input.value }, () => {
+    console.log("메시지 전달 완료! 콜백!");
+  });
 }
 
-function handleNickSubmit(event) {
-  event.preventDefault();
-  const input = nicknameForm.querySelector("input");
-  socket.send(formatMsg("nickname", input.value));
-  input.value = "";
-}
-
-messageForm.addEventListener("submit", handleMsgSubmit);
-nicknameForm.addEventListener("submit", handleNickSubmit);
+form.addEventListener("submit", handleRoomSubmit);
