@@ -16,9 +16,20 @@ const httpServer = http.createServer(app);
 const websocketServer = SocketIo(httpServer);
 
 websocketServer.on("connection", (socket) => {
-  console.log("socket", socket);
-  socket.on("createRoom", (payload, cbFunc) => {
-    cbFunc(); // 프론트 함수를 백엔드에서 실행할 수 있음 !! - 실시간 업데이트 - 서버 푸시 알림
+  socket.onAny((event) => {
+    console.log(`${event} 이벤트 발생!`);
+  });
+  socket.on("create_room", (roomName, cbFunc) => {
+    socket.join(roomName);
+    cbFunc();
+    socket.to(roomName).emit("join");
+  });
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => socket.to(room).emit("leave"));
+  });
+  socket.on("send_message", (msg, room, cbFunc) => {
+    socket.to(room).emit("send_message", msg);
+    cbFunc();
   });
 });
 
