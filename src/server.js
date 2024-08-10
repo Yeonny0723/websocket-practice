@@ -19,16 +19,19 @@ websocketServer.on("connection", (socket) => {
   socket.onAny((event) => {
     console.log(`${event} 이벤트 발생!`);
   });
-  socket.on("create_room", (roomName, cbFunc) => {
+  socket.on("create_room", (roomName, nickname, cbFunc) => {
+    socket["nickname"] = nickname;
     socket.join(roomName);
     cbFunc();
-    socket.to(roomName).emit("join");
+    socket.to(roomName).emit("join", socket.nickname);
   });
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((room) => socket.to(room).emit("leave"));
+    socket.rooms.forEach((room) =>
+      socket.to(room).emit("leave", socket.nickname)
+    );
   });
-  socket.on("send_message", (msg, room, cbFunc) => {
-    socket.to(room).emit("send_message", msg);
+  socket.on("send_message", (msg, room, nickname, cbFunc) => {
+    socket.to(room).emit("send_message", `${nickname}: ${msg}`);
     cbFunc();
   });
 });
