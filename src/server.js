@@ -1,6 +1,7 @@
 import http from "http";
-import SocketIo from "socket.io";
 import express from "express";
+import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 
 const app = express();
 
@@ -13,7 +14,17 @@ app.get("/*", (req, res) => res.redirect("/"));
 const handleListen = () => console.log(`Listening on ws://localhost:3000`);
 
 const httpServer = http.createServer(app);
-const websocketServer = SocketIo(httpServer);
+const websocketServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(websocketServer, {
+  auth: false,
+  mode: "development",
+});
 
 function getPublicRooms() {
   const { sids, rooms } = websocketServer.sockets.adapter; // 현재 서버의 어댑터에 연결된 모든 소켓과 룸 정보
