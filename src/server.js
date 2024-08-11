@@ -33,6 +33,12 @@ function getPublicRooms() {
   return publicRoooms;
 }
 
+function countUser(roomName) {
+  const rooms = websocketServer.sockets.adapter.rooms;
+  const room = rooms.get(roomName);
+  return room.size;
+}
+
 websocketServer.on("connection", (socket) => {
   socket.onAny((event) => {
     console.log(`${event} 이벤트 발생!`);
@@ -41,12 +47,14 @@ websocketServer.on("connection", (socket) => {
     socket["nickname"] = nickname;
     socket.join(roomName);
     cbFunc();
-    socket.to(roomName).emit("join", socket.nickname);
+    socket.to(roomName).emit("join", socket.nickname, countUser(roomName));
     websocketServer.sockets.emit("list_rooms", getPublicRooms());
   });
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((room) =>
-      socket.to(room).emit("leave", socket.nickname)
+    socket.rooms.forEach((roomName) =>
+      socket
+        .to(roomName)
+        .emit("leave", socket.nickname, countUser(roomName) - 1)
     );
   });
   socket.on("disconnect", () => {

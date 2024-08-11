@@ -49,9 +49,17 @@ function addMessage(message) {
 roomCreateForm.addEventListener("submit", handleRoomSubmit);
 roomForm.addEventListener("submit", handleMessageSubmit);
 
-socket.on("join", (nickname) => addMessage(`${nickname} joined.`));
+socket.on("join", (nickname, userCount) => {
+  const h3 = roomContainer.querySelector("h3");
+  h3.innerText = `방 ${roomName} (${userCount})`;
+  addMessage(`${nickname} joined.`);
+});
 socket.on("send_message", addMessage);
-socket.on("leave", (nickname) => addMessage(`${nickname} left.`));
+socket.on("leave", (nickname, userCount) => {
+  const h3 = roomContainer.querySelector("h3");
+  h3.innerText = `Room ${roomName} (${userCount})`;
+  addMessage(`${nickname} left.`);
+});
 socket.on("list_rooms", (publicRooms) => {
   const roomList = document.querySelector("ul");
   roomList.innerHTML = "";
