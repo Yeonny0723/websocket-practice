@@ -15,6 +15,24 @@ const handleListen = () => console.log(`Listening on ws://localhost:3000`);
 const httpServer = http.createServer(app);
 const websocketServer = SocketIo(httpServer);
 
+function getPublicRooms() {
+  const { sids, rooms } = websocketServer.sockets.adapter; // 현재 서버의 어댑터에 연결된 모든 소켓과 룸 정보
+  // sids: (k) socket id (v) room id. 소켓이 어떤 방에 참여 중인지.
+  // rooms: (k) room id (v) socket id. 방에 어떤 소켓이 참여 중인지.
+
+  // public room: 퍼플릭 룸은 소켓이 특정 룸에 join할 때 처음 생성 socket.join(<<roomName>>)
+  // private room: 모든 socket은 자기의 sid를 이름으로 하는 private room을 가짐
+
+  const publicRoooms = [];
+  rooms.forEach((socketId, roomId) => {
+    if (sids.get(roomId) === undefined) {
+      // socket id랑 일치하는 방 이름이 없다면 퍼블릭룸!
+      publicRoooms.push(roomId);
+    }
+  });
+  return publicRoooms;
+}
+
 websocketServer.on("connection", (socket) => {
   socket.onAny((event) => {
     console.log(`${event} 이벤트 발생!`);
@@ -24,11 +42,15 @@ websocketServer.on("connection", (socket) => {
     socket.join(roomName);
     cbFunc();
     socket.to(roomName).emit("join", socket.nickname);
+    websocketServer.sockets.emit("list_rooms", getPublicRooms());
   });
   socket.on("disconnecting", () => {
     socket.rooms.forEach((room) =>
       socket.to(room).emit("leave", socket.nickname)
     );
+  });
+  socket.on("disconnect", () => {
+    websocketServer.sockets.emit("list_rooms", getPublicRooms());
   });
   socket.on("send_message", (msg, room, nickname, cbFunc) => {
     socket.to(room).emit("send_message", `${nickname}: ${msg}`);
