@@ -13,13 +13,6 @@ app.get("/*", (req, res) => res.redirect("/"));
 const handleListen = () => console.log(`Listening on ws://localhost:3000`);
 
 const httpServer = http.createServer(app);
-const websocketServer = SocketIo(httpServer);
-
-websocketServer.on("connection", (socket) => {
-  console.log("socket", socket);
-  socket.on("createRoom", (payload, cbFunc) => {
-    cbFunc(); // 프론트 함수를 백엔드에서 실행할 수 있음 !! - 실시간 업데이트 - 서버 푸시 알림
-  });
-});
+const wsServer = SocketIo(httpServer);
 
 httpServer.listen(3000, handleListen);

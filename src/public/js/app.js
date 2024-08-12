@@ -1,15 +1,46 @@
-const socket = io(); // 서버 연결 socket.io 내장 함수
+const socket = io();
+const videoContainer = document.getElementById("videoContainer");
+const myVideoStream = document.getElementById("myVideo");
+const muteBtn = document.getElementById("muteBtn");
+const cameraSwitchBtn = document.getElementById("cameraSwitchBtn");
 
-const roomContainer = document.getElementById("room-container");
-const form = roomContainer.querySelector("form");
+let videoStream;
+let cameraOn = false;
+let muteOn = false;
 
-function handleRoomSubmit(event) {
-  event.preventDefault();
-  const input = form.querySelector("input");
-  // emit(커스텀이벤트, ...페이로드 여러개...)
-  socket.emit("createRoom", { payload: input.value }, () => {
-    console.log("메시지 전달 완료! 콜백!");
-  });
+async function getVideoMedia() {
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    });
+    myVideoStream.srcObject = videoStream; // video stream 연결
+  } catch (e) {
+    console.log(e);
+  }
 }
 
-form.addEventListener("submit", handleRoomSubmit);
+function handleMuteClick() {
+  if (muteOn) {
+    muteBtn.innerText = "Mute";
+    muteOn = false;
+  } else {
+    muteBtn.innerText = "UnMute";
+    muteOn = true;
+  }
+}
+
+function handleCameraCLick() {
+  if (cameraOn) {
+    cameraSwitchBtn.innerText = "Off";
+    cameraOn = false;
+  } else {
+    cameraSwitchBtn.innerText = "On";
+    cameraOn = true;
+  }
+}
+
+muteBtn.addEventListener("click", handleMuteClick);
+cameraSwitchBtn.addEventListener("click", handleCameraCLick);
+
+getVideoMedia();

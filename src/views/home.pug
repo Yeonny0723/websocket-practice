@@ -9,9 +9,9 @@ html(lang="en")
         header 
             h1 Video Chat
         main 
-            div#room-container
-                form
-                    input(placeholder="room name", required, type="text")
-                    button Enter Room
+            div#videoContainer
+                video#myVideo(autoplay, playsinline, muted, width="400",height="400")
+                button#muteBtn Mute
+                button#cameraSwitchBtn Off 
         script(src="/socket.io/socket.io.js") 
         script(src="/public/js/app.js") 
