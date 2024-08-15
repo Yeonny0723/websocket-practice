@@ -4,16 +4,22 @@ const myVideoStream = document.getElementById("myVideo");
 const muteBtn = document.getElementById("muteBtn");
 const cameraSwitchBtn = document.getElementById("cameraSwitchBtn");
 const cameraSelects = document.getElementById("cameraSelects");
+const roomJoinContainer = document.getElementById("joinRoomContainer");
+const roomJoinForm = roomJoinContainer.querySelector("form");
+
+videoContainer.hidden = true;
 
 let myStream;
 let cameraOn = false;
 let muteOn = false;
+let roomName;
 
 async function getCamerasAvailable() {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices(); // 가능한 모든 장치
     const cameras = devices.filter((d) => d.kind === "videoinput");
     const currentCamera = myStream.getVideoTracks()[0]; // 현재 비디오 device
+    cameraSelects.innerHTML = "";
     cameras.forEach((camera) => {
       const option = document.createElement("option");
       option.value = camera.deviceId;
@@ -27,6 +33,12 @@ async function getCamerasAvailable() {
   } catch (e) {
     console.log(e);
   }
+}
+
+function startMedia() {
+  roomJoinContainer.hidden = true;
+  videoContainer.hidden = false;
+  getVideoMedia();
 }
 
 async function getVideoMedia(deviceId) {
@@ -85,8 +97,19 @@ async function handleCameraChange() {
   await getVideoMedia(cameraSelects.value);
 }
 
+function handleRoomJoinSubmit(event) {
+  event.preventDefault();
+  const roomNameInput = roomJoinForm.querySelector("input");
+  socket.emit("join_room", roomNameInput.value, startMedia);
+  roomName = roomNameInput.value;
+  roomNameInput.value = "";
+}
+
 muteBtn.addEventListener("click", handleMuteClick);
 cameraSwitchBtn.addEventListener("click", handleCameraCLick);
 cameraSelects.addEventListener("input", handleCameraChange);
+roomJoinForm.addEventListener("submit", handleRoomJoinSubmit);
 
-getVideoMedia();
+socket.on("room_joined", () => {
+  console.log("someone joined");
+});

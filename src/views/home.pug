@@ -9,6 +9,10 @@ html(lang="en")
         header 
             h1 Video Chat
         main 
+            div#joinRoomContainer
+                form
+                    input(placeholder="room name", required, type="text")
+                    button Enter room
             div#videoContainer
                 video#myVideo(autoplay, playsinline,width="400",height="400")
                 button#muteBtn Mute
