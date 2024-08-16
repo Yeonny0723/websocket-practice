@@ -13,6 +13,7 @@ let myStream;
 let cameraOn = false;
 let muteOn = false;
 let roomName;
+let myPeerConnection; // 내 room에 참여하는 peer
 
 async function getCamerasAvailable() {
   try {
@@ -35,10 +36,20 @@ async function getCamerasAvailable() {
   }
 }
 
-function startMedia() {
+async function startMedia() {
   roomJoinContainer.hidden = true;
   videoContainer.hidden = false;
-  getVideoMedia();
+  await getVideoMedia();
+  makeConnection();
+}
+
+// peer 간 연결 설정 함수
+function makeConnection() {
+  myPeerConnection = new RTCPeerConnection();
+  // peer 간의 스트림 트랙을 주고 받을 수 있는 원격 연결 설정 객체
+  myStream // 내 스크림을 원격 피어 객체로 전송
+    .getTracks()
+    .forEach((track) => myPeerConnection.addTrack(track, myStream));
 }
 
 async function getVideoMedia(deviceId) {
@@ -97,10 +108,11 @@ async function handleCameraChange() {
   await getVideoMedia(cameraSelects.value);
 }
 
-function handleRoomJoinSubmit(event) {
+async function handleRoomJoinSubmit(event) {
   event.preventDefault();
   const roomNameInput = roomJoinForm.querySelector("input");
-  socket.emit("join_room", roomNameInput.value, startMedia);
+  await startMedia();
+  socket.emit("join_room", roomNameInput.value);
   roomName = roomNameInput.value;
   roomNameInput.value = "";
 }
@@ -110,6 +122,22 @@ cameraSwitchBtn.addEventListener("click", handleCameraCLick);
 cameraSelects.addEventListener("input", handleCameraChange);
 roomJoinForm.addEventListener("submit", handleRoomJoinSubmit);
 
-socket.on("room_joined", () => {
-  console.log("someone joined");
+socket.on("room_joined", async () => {
+  debugger;
+  const offer = await myPeerConnection.createOffer();
+  myPeerConnection.setLocalDescription(offer);
+  console.log("sent the offer");
+  socket.emit("offer", offer, roomName);
+});
+
+socket.on("offer", async (offer) => {
+  debugger;
+  myPeerConnection.setRemoteDescription(offer);
+  const answer = await myPeerConnection.createAnswer();
+  myPeerConnection.setLocalDescription(answer);
+  socket.emit("answer", answer, roomName);
+});
+
+socket.on("answer", (answer) => {
+  myPeerConnection.setRemoteDescription(answer);
 });

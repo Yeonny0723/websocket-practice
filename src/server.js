@@ -16,10 +16,15 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIo(httpServer);
 
 wsServer.on("connection", (socket) => {
-  socket.on("join_room", (roomName, sendMedia) => {
+  socket.on("join_room", (roomName) => {
     socket.join(roomName);
-    sendMedia();
     socket.to(roomName).emit("room_joined");
+  });
+  socket.on("offer", async (offer, roomName) => {
+    socket.to(roomName).emit("offer", offer); // room 내 모든 브라우저로 방금 접속한 브라우저의 offer 전달
+  });
+  socket.on("answer", (answer, roomName) => {
+    socket.to(roomName).emit("answer", answer);
   });
 });
 
