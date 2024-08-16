@@ -50,6 +50,19 @@ function makeConnection() {
   myStream // 내 스크림을 원격 피어 객체로 전송
     .getTracks()
     .forEach((track) => myPeerConnection.addTrack(track, myStream));
+  myPeerConnection.addEventListener("track", handleAddStream); // myPeerConnection.addTrack 이 완료된 후 발생하는 이벤트. 스트림 받아와 영상 연결하기!
+  myPeerConnection.addEventListener("icecandidate", handleIce); // setRemoteDescription 호출 후 WebRTC의 ICE 프로세스가 시작되며 발생하는 이벤트
+}
+
+function handleAddStream(data) {
+  debugger;
+  const peerFace = document.getElementById("peerVideo");
+  peerFace.srcObject = data.streams[0];
+}
+
+function handleIce(data) {
+  socket.emit("ice", data.candidate, roomName);
+  console.log("sent candidate");
 }
 
 async function getVideoMedia(deviceId) {
@@ -123,7 +136,6 @@ cameraSelects.addEventListener("input", handleCameraChange);
 roomJoinForm.addEventListener("submit", handleRoomJoinSubmit);
 
 socket.on("room_joined", async () => {
-  debugger;
   const offer = await myPeerConnection.createOffer();
   myPeerConnection.setLocalDescription(offer);
   console.log("sent the offer");
@@ -131,13 +143,20 @@ socket.on("room_joined", async () => {
 });
 
 socket.on("offer", async (offer) => {
-  debugger;
+  console.log("received the offer");
   myPeerConnection.setRemoteDescription(offer);
   const answer = await myPeerConnection.createAnswer();
   myPeerConnection.setLocalDescription(answer);
   socket.emit("answer", answer, roomName);
+  console.log("send the answer");
 });
 
 socket.on("answer", (answer) => {
+  console.log("received the answer");
   myPeerConnection.setRemoteDescription(answer);
+});
+
+socket.on("ice", (ice) => {
+  console.log("received candidate");
+  myPeerConnection.addIceCandidate(ice);
 });
