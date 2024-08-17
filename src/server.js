@@ -1,7 +1,6 @@
 import http from "http";
 import express from "express";
-import { Server } from "socket.io";
-import { instrument } from "@socket.io/admin-ui";
+import SocketIO from "socket.io";
 
 const app = express();
 
@@ -14,7 +13,7 @@ app.get("/*", (req, res) => res.redirect("/"));
 const handleListen = () => console.log(`Listening on ws://localhost:3000`);
 
 const httpServer = http.createServer(app);
-const wsServer = SocketIo(httpServer);
+const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
   socket.on("join_room", (roomName) => {
