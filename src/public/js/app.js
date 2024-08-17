@@ -45,7 +45,19 @@ async function startMedia() {
 
 // peer 간 연결 설정 함수
 function makeConnection() {
-  myPeerConnection = new RTCPeerConnection();
+  myPeerConnection = new RTCPeerConnection({
+    iceServers: [
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302",
+          "stun:stun2.l.google.com:19302",
+          "stun:stun3.l.google.com:19302",
+          "stun:stun4.l.google.com:19302",
+        ],
+      },
+    ],
+  });
   // peer 간의 스트림 트랙을 주고 받을 수 있는 원격 연결 설정 객체
   myStream // 내 스크림을 원격 피어 객체로 전송
     .getTracks()
